@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Pro - Learning Portal</title>
+
+<style>
+:root {
+    --primary:#2563eb;
+    --bg:#f8fafc;
+    --card:#ffffff;
+    --text:#1e293b;
+}
+body{
+    margin:0;
+    font-family:Segoe UI, sans-serif;
+    background:var(--bg);
+    color:var(--text);
+}
+header{
+    background:var(--primary);
+    color:white;
+    padding:15px;
+    text-align:center;
+}
+.container{
+    max-width:900px;
+    margin:auto;
+    padding:20px;
+}
+.grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+    gap:15px;
+}
+.card{
+    background:var(--card);
+    padding:20px;
+    border-radius:10px;
+    text-align:center;
+    font-weight:bold;
+    cursor:pointer;
+    border:2px solid #e2e8f0;
+    transition:0.3s;
+}
+.card:hover{
+    border-color:var(--primary);
+    transform:translateY(-3px);
+}
+button{
+    padding:10px 15px;
+    border:none;
+    border-radius:5px;
+    background:#64748b;
+    color:white;
+    cursor:pointer;
+}
+.hidden{display:none;}
+iframe{
+    width:100%;
+    border-radius:10px;
+}
+.progress-btn{
+    background:#22c55e;
+    margin-top:10px;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<h1>Student Pro 📘</h1>
+<p>Class 9–12 Free Notes & Videos</p>
+</header>
+
+<div class="container">
+<button id="backBtn" class="hidden" onclick="goHome()">⬅ Back</button>
+<h3 id="title">Select Class</h3>
+<div id="content" class="grid"></div>
+</div>
+
+<script>
+// ================= DATA =================
+
+const data = {
+ "Class 9":{
+   "Maths":[
+     {chapter:"Real Numbers",pdf:"pdfs/c9-maths-real.pdf",video:"https://www.youtube.com/embed/9xF5g3kU3gM"},
+     {chapter:"Polynomials",pdf:"pdfs/c9-maths-poly.pdf",video:"https://www.youtube.com/embed/6hZP1bJ7L1M"}
+   ],
+   "Science":[
+     {chapter:"Matter in Our Surroundings",pdf:"pdfs/c9-sci-matter.pdf",video:"https://www.youtube.com/embed/6lR9zZQnJmY"}
+   ]
+ },
+
+ "Class 10":{
+   "Maths":[
+     {chapter:"Quadratic Equations",pdf:"pdfs/c10-maths-quad.pdf",video:"https://www.youtube.com/embed/7fYpRk7X0xE"}
+   ],
+   "Science":[
+     {chapter:"Chemical Reactions",pdf:"pdfs/c10-sci-chem.pdf",video:"https://www.youtube.com/embed/XVJ6RZJ0cKw"}
+   ]
+ },
+
+ "Class 11":{
+   "Physics":[
+     {chapter:"Motion in Straight Line",pdf:"pdfs/c11-phy-motion.pdf",video:"https://www.youtube.com/embed/kH5P7zLQ8KQ"}
+   ],
+   "Chemistry":[
+     {chapter:"Some Basic Concepts",pdf:"pdfs/c11-chem-basic.pdf",video:"https://www.youtube.com/embed/6x2N2wU6s2M"}
+   ]
+ },
+
+ "Class 12":{
+   "Physics":[
+     {chapter:"Electric Charges",pdf:"pdfs/c12-phy-electric.pdf",video:"https://www.youtube.com/embed/2XcX9ZpM5Mg"}
+   ],
+   "Biology":[
+     {chapter:"Reproduction",pdf:"pdfs/c12-bio-repro.pdf",video:"https://www.youtube.com/embed/8aFJ3mP8fZ4"}
+   ]
+ }
+};
+
+// ================= STATE =================
+let currentClass="",currentSubject="",currentChapter="";
+
+// ================= ELEMENTS =================
+const content=document.getElementById("content");
+const title=document.getElementById("title");
+const backBtn=document.getElementById("backBtn");
+
+// ================= FUNCTIONS =================
+
+function showClasses(){
+ backBtn.classList.add("hidden");
+ title.innerText="Select Class";
+ content.innerHTML="";
+ Object.keys(data).forEach(cls=>{
+   createCard(cls,()=>showSubjects(cls));
+ });
+}
+
+function showSubjects(cls){
+ currentClass=cls;
+ backBtn.classList.remove("hidden");
+ title.innerText=cls+" - Select Subject";
+ content.innerHTML="";
+ Object.keys(data[cls]).forEach(sub=>{
+   createCard(sub,()=>showChapters(sub));
+ });
+}
+
+function showChapters(sub){
+ currentSubject=sub;
+ title.innerText=currentClass+" > "+sub+" > Chapters";
+ content.innerHTML="";
+ data[currentClass][sub].forEach(ch=>{
+   let done=isCompleted(ch.chapter)?" ✅":"";
+   createCard(ch.chapter+done,()=>showContent(ch));
+ });
+}
+
+function showContent(ch){
+ currentChapter=ch.chapter;
+ title.innerText=currentSubject+" > "+ch.chapter;
+ content.innerHTML=`
+ <h4>📘 Notes (View Only)</h4>
+ <iframe src="${ch.pdf}" height="400"></iframe>
+
+ <h4>🎥 Video Lecture</h4>
+ <iframe src="${ch.video}" height="315" allowfullscreen></iframe>
+
+ <button class="progress-btn" onclick="markDone('${ch.chapter}')">
+ ✔ Mark as Completed
+ </button>
+ `;
+}
+
+function createCard(text,click){
+ const div=document.createElement("div");
+ div.className="card";
+ div.innerText=text;
+ div.onclick=click;
+ content.appendChild(div);
+}
+
+// ================= PROGRESS =================
+
+function markDone(ch){
+ let p=JSON.parse(localStorage.getItem("progress"))||{};
+ let key=currentClass+"-"+currentSubject;
+ if(!p[key])p[key]=[];
+ if(!p[key].includes(ch)){
+   p[key].push(ch);
+   localStorage.setItem("progress",JSON.stringify(p));
+   alert("Chapter Completed ✅");
+ }
+}
+
+function isCompleted(ch){
+ let p=JSON.parse(localStorage.getItem("progress"))||{};
+ let key=currentClass+"-"+currentSubject;
+ return p[key]?.includes(ch);
+}
+
+function goHome(){
+ showClasses();
+}
+
+// ================= START =================
+showClasses();
+</script>
+
+</body>
+</html>
